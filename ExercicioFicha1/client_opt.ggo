@@ -1,0 +1,9 @@
+package "Client"
+version "1.0"
+purpose "An IP stack client"
+
+option  "port"     p   "Port number"   int     yes
+option  "ip"       i   "IP number"     string     yes
+option  "request"  r   "request"       string  yes
+option  "device"   d   "device"        int  no
+

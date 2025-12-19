@@ -1,0 +1,10 @@
+package "Client"
+version "1.0"
+purpose "An IP stack client"
+option	"ip"	i	"IP adddress"	string	yes
+option	"port"	p	"Port number"	int	yes
+option	"value" v	"temperature value to convert"	float	yes
+option	"from"	f	"inicial temperature unit"	string	yes
+option	"to"	t	"temperatura unit after conversion"	string	yes
+# podia ter usado ao inves da verificao manual
+# option "from" f "unidade de origem" values="C","F","K" string yes
