@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>Guia Mestre - Programação Avançada (ESTG)</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 1100px; margin: auto; padding: 20px; background-color: #f4f7f9; }
+        header { background: #8b0000; color: white; padding: 30px; border-radius: 12px; margin-bottom: 30px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        h2 { background: #8b0000; color: white; padding: 12px 20px; border-radius: 8px; margin-top: 40px; text-transform: uppercase; letter-spacing: 1px; }
+        h3 { color: #8b0000; border-left: 4px solid #8b0000; padding-left: 10px; margin-top: 25px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .card { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-top: 5px solid #8b0000; transition: transform 0.2s; }
+        .card:hover { transform: translateY(-5px); }
+        code { background: #fff3f3; color: #d32f2f; padding: 3px 6px; border-radius: 4px; font-family: 'Consolas', monospace; font-weight: bold; font-size: 1.1em; }
+        pre { background: #1e1e1e; color: #dcdcdc; padding: 20px; overflow-x: auto; border-radius: 8px; font-size: 0.95em; line-height: 1.4; border-left: 10px solid #555; }
+        .important { background: #fff9c4; border-left: 6px solid #fbc02d; padding: 15px; margin: 20px 0; border-radius: 5px; font-weight: 500; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; background: white; }
+        th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
+        th { background-color: #f2f2f2; color: #8b0000; }
+        .bit-1 { color: #4caf50; font-weight: bold; }
+        .bit-0 { color: #f44336; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Programação Avançada: Guia de Exame Prático</h1>
+    <p>Comunicações UDP, Manipulação de Bits e Estruturas de Dados</p>
+</header>
+
+<section>
+    <h2>1. Protocolos Binários com Estruturas</h2>
+    <div class="important">
+        <strong>Atenção ao Layout:</strong> Para que o <code>recvfrom</code> mapeie os dados corretamente, a ordem na <code>struct</code> deve ser IDÊNTICA à do enunciado.
+    </div>
+
+    <div class="card">
+        <h3>Definição de Estrutura Empacotada</h3>
+        <p>Usa <code>__attribute__((packed))</code> para evitar que o compilador adicione "espaços" (padding) entre os campos.</p>
+        <pre>
+typedef struct __attribute__((__packed__)) {
+    uint8_t operacao;       // 1 byte - Byte 0
+    uint32_t n_estudante;   // 4 bytes - Bytes 1 a 4
+    uint32_t telefone;      // 4 bytes - Bytes 5 a 8
+} pedido_t;
+        </pre>
+    </div>
+
+    <div class="grid">
+        <div class="card">
+            <h3>Receber Estrutura (Servidor)</h3>
+            <pre>
+pedido_t pedido;
+// Recebe diretamente para a struct
+udp_read_bytes = recvfrom(socket, &pedido, sizeof(pedido), 0, ...);
+
+// Converter Endianness de campos > 1 byte
+uint32_t aluno = ntohl(pedido.n_estudante);
+uint32_t tel = ntohl(pedido.telefone);
+            </pre>
+        </div>
+        <div class="card">
+            <h3>Enviar Estrutura (Cliente)</h3>
+            <pre>
+pedido_t msg;
+msg.operacao = 1; 
+// Converte para Network Order antes de enviar
+msg.n_estudante = htonl(2222222);
+msg.telefone = htonl(912345678);
+
+sendto(socket, &msg, sizeof(msg), 0, ...);
+            </pre>
+        </div>
+    </div>
+</section>
+
+<section>
+    <h2>2. Tipos de Dados e Endianness</h2>
+    <div class="grid">
+        <div class="card">
+            <h3>uint8_t (1 Byte)</h3>
+            <p><strong>Uso:</strong> Códigos de operação (0-255), Flags.</p>
+            <p><strong>Conversão:</strong> Nenhuma necessária.</p>
+        </div>
+        <div class="card">
+            <h3>uint32_t (4 Bytes)</h3>
+            <p><strong>Uso:</strong> Números de Estudante, IPs, Telefones.</p>
+            <p><strong>Conversão:</strong> <code>htonl()</code> / <code>ntohl()</code>.</p>
+        </div>
+    </div>
+</section>
+
+<section>
+    <h2>3. Manipulação de Bits (Bitwise)</h2>
+    <div class="card">
+        <h3>Operações e Visualização</h3>
+        <pre>
+// INVERTER o bit (FLIP)
+dado ^= (1 << pos); 
+
+// Função para imprimir Binário
+void print_binary(uint8_t valor) {
+    for (int j = 7; j >= 0; j--) {
+        int bit = (valor >> j) & 1; 
+        printf("%d", bit);
+    }
+    printf("\n");
+}
+        </pre>
+    </div>
+</section>
+
+<section>
+    <h2>4. Validações e Erros Comuns</h2>
+    <div class="important">
+        <strong>Lógica de Fluxo:</strong> Se houver erro nos dados, envia a resposta de erro e usa <code>continue</code> para saltar o resto do ciclo <code>while(1)</code>.
+    </div>
+    <div class="card">
+        <h3>Checklist de Validação</h3>
+        <ul>
+            <li><strong>Tamanho:</strong> <code>if (udp_read_bytes != sizeof(pedido_t))</code>.</li>
+            <li><strong>Gama:</strong> Estudante entre [2.000.000, 3.000.000[.</li>
+            <li><strong>Telefone:</strong> Começar por 9 (>= 900.000.000 e < 1.000.000.000).</li>
+            <li><strong>Array:</strong> Não exceder 200 contactos totais.</li>
+        </ul>
+    </div>
+</section>
+
+<section>
+    <h2>5. Tabelas Auxiliares</h2>
+    <div class="grid">
+        <div class="card">
+            <h3>Formatação de Strings</h3>
+            <table>
+                <tr><th>%x</th><th>Hex minúsculo (a)</th></tr>
+                <tr><th>%X</th><th>Hex maiúsculo (A)</th></tr>
+                <tr><th>%02x</th><th>Hex de 2 dígitos (0a)</th></tr>
+            </table>
+        </div>
+        <div class="card">
+            <h3>sscanf / sprintf</h3>
+            <pre>
+// Extrair de string "10,20"
+sscanf(str, "%d,%d", &a, &b);
+
+// Criar string formatada
+sprintf(res, "Soma: %d", a+b);
+            </pre>
+        </div>
+    </div>
+</section>
+
+<footer style="margin-top: 50px; text-align: center; font-size: 0.9em; color: #666;">
+    <p>ESTG - Programação Avançada - Guia Prático de Exame</p>
+</footer>
+
+</body>
+</html>
