@@ -4,154 +4,213 @@
     <meta charset="UTF-8">
     <title>Guia Mestre - Programação Avançada (ESTG)</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 1100px; margin: auto; padding: 20px; background-color: #f4f7f9; }
-        header { background: #8b0000; color: white; padding: 30px; border-radius: 12px; margin-bottom: 30px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-        h2 { background: #8b0000; color: white; padding: 12px 20px; border-radius: 8px; margin-top: 40px; text-transform: uppercase; letter-spacing: 1px; }
-        h3 { color: #8b0000; border-left: 4px solid #8b0000; padding-left: 10px; margin-top: 25px; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
-        .card { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-top: 5px solid #8b0000; transition: transform 0.2s; }
-        .card:hover { transform: translateY(-5px); }
-        code { background: #fff3f3; color: #d32f2f; padding: 3px 6px; border-radius: 4px; font-family: 'Consolas', monospace; font-weight: bold; font-size: 1.1em; }
-        pre { background: #1e1e1e; color: #dcdcdc; padding: 20px; overflow-x: auto; border-radius: 8px; font-size: 0.95em; line-height: 1.4; border-left: 10px solid #555; }
-        .important { background: #fff9c4; border-left: 6px solid #fbc02d; padding: 15px; margin: 20px 0; border-radius: 5px; font-weight: 500; }
-        table { width: 100%; border-collapse: collapse; margin: 20px 0; background: white; }
-        th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
+        @media print {
+            body { background-color: white !important; }
+            .card { box-shadow: none !important; border: 1px solid #ddd !important; page-break-inside: avoid; }
+            header { box-shadow: none !important; }
+        }
+        body { font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.5; color: #222; max-width: 1000px; margin: auto; padding: 15px; background-color: #f0f2f5; }
+        header { background: #8b0000; color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; text-align: center; }
+        h2 { background: #8b0000; color: white; padding: 10px 15px; border-radius: 5px; margin-top: 30px; font-size: 1.4em; }
+        h3 { color: #8b0000; border-bottom: 2px solid #8b0000; padding-bottom: 5px; margin-top: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(45%, 1fr)); gap: 15px; }
+        .card { background: white; border-radius: 8px; padding: 15px; margin-bottom: 15px; border-top: 4px solid #8b0000; }
+        code { background: #fff3f3; color: #d32f2f; padding: 2px 5px; border-radius: 4px; font-family: 'Consolas', monospace; font-weight: bold; }
+        pre { background: #1e1e1e; color: #dcdcdc; padding: 15px; overflow-x: auto; border-radius: 6px; font-size: 0.9em; border-left: 5px solid #8b0000; }
+        .important { background: #fff9c4; border-left: 6px solid #fbc02d; padding: 12px; margin: 15px 0; border-radius: 4px; font-weight: 500; }
+        table { width: 100%; border-collapse: collapse; margin: 15px 0; background: white; }
+        th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }
         th { background-color: #f2f2f2; color: #8b0000; }
-        .bit-1 { color: #4caf50; font-weight: bold; }
-        .bit-0 { color: #f44336; font-weight: bold; }
+        .method { color: #2e7d32; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <header>
-    <h1>Programação Avançada: Guia de Exame Prático</h1>
-    <p>Comunicações UDP, Manipulação de Bits e Estruturas de Dados</p>
+    <h1>Programação Avançada: Sebenta de Exame</h1>
+    <p>Comunicações UDP, Manipulação de Bits, Strings e Memória</p>
 </header>
 
 <section>
-    <h2>1. Protocolos Binários com Estruturas</h2>
+    <h2>1. Comunicações UDP e Estruturas</h2>
     <div class="important">
-        <strong>Atenção ao Layout:</strong> Para que o <code>recvfrom</code> mapeie os dados corretamente, a ordem na <code>struct</code> deve ser IDÊNTICA à do enunciado.
+        <strong>Regra de Ouro:</strong> Sempre que enviares ou receberes estruturas via rede, usa <code>__attribute__((packed))</code> para evitar falhas de alinhamento de memória.
     </div>
-
+    
     <div class="card">
-        <h3>Definição de Estrutura Empacotada</h3>
-        <p>Usa <code>__attribute__((packed))</code> para evitar que o compilador adicione "espaços" (padding) entre os campos.</p>
+        <h3>Definição da Mensagem</h3>
         <pre>
 typedef struct __attribute__((__packed__)) {
-    uint8_t operacao;       // 1 byte - Byte 0
-    uint32_t n_estudante;   // 4 bytes - Bytes 1 a 4
-    uint32_t telefone;      // 4 bytes - Bytes 5 a 8
-} pedido_t;
-        </pre>
+    uint8_t  op;           // 1 byte
+    uint32_t id_estudante; // 4 bytes (necessita htonl/ntohl)
+    uint16_t porto;        // 2 bytes (necessita htons/ntohs)
+} msg_t;</pre>
     </div>
 
     <div class="grid">
         <div class="card">
-            <h3>Receber Estrutura (Servidor)</h3>
+            <h3>Enviar (Cliente)</h3>
             <pre>
-pedido_t pedido;
-// Recebe diretamente para a struct
-udp_read_bytes = recvfrom(socket, &pedido, sizeof(pedido), 0, ...);
+msg_t m;
+m.op = 1;
+m.id_estudante = htonl(2190000);
+m.porto = htons(9999);
 
-// Converter Endianness de campos > 1 byte
-uint32_t aluno = ntohl(pedido.n_estudante);
-uint32_t tel = ntohl(pedido.telefone);
-            </pre>
+sendto(sock, &m, sizeof(m), 0, 
+      (struct sockaddr*)&serv_addr, 
+       sizeof(serv_addr));</pre>
         </div>
         <div class="card">
-            <h3>Enviar Estrutura (Cliente)</h3>
+            <h3>Receber (Servidor)</h3>
             <pre>
-pedido_t msg;
-msg.operacao = 1; 
-// Converte para Network Order antes de enviar
-msg.n_estudante = htonl(2222222);
-msg.telefone = htonl(912345678);
+msg_t m;
+struct sockaddr_in cli;
+socklen_t len = sizeof(cli);
 
-sendto(socket, &msg, sizeof(msg), 0, ...);
-            </pre>
+recvfrom(sock, &m, sizeof(m), 0,
+         (struct sockaddr*)&cli, &len);
+
+uint32_t id = ntohl(m.id_estudante);</pre>
         </div>
     </div>
 </section>
 
 <section>
-    <h2>2. Tipos de Dados e Endianness</h2>
-    <div class="grid">
-        <div class="card">
-            <h3>uint8_t (1 Byte)</h3>
-            <p><strong>Uso:</strong> Códigos de operação (0-255), Flags.</p>
-            <p><strong>Conversão:</strong> Nenhuma necessária.</p>
-        </div>
-        <div class="card">
-            <h3>uint32_t (4 Bytes)</h3>
-            <p><strong>Uso:</strong> Números de Estudante, IPs, Telefones.</p>
-            <p><strong>Conversão:</strong> <code>htonl()</code> / <code>ntohl()</code>.</p>
-        </div>
-    </div>
-</section>
+    <h2>2. Manipulação de Bits (Bitwise)</h2>
+    <p>Essencial para verificar estados de sensores ou flags de configuração.</p>
 
-<section>
-    <h2>3. Manipulação de Bits (Bitwise)</h2>
     <div class="card">
-        <h3>Operações e Visualização</h3>
-        <pre>
-// INVERTER o bit (FLIP)
-dado ^= (1 << pos); 
+        <h3>Operações Rápidas (Bit na posição <code>n</code>)</h3>
+        <table>
+            <tr>
+                <th>Operação</th>
+                <th>Código C</th>
+                <th>Explicação</th>
+            </tr>
+            <tr>
+                <td><span class="method">Verificar</span></td>
+                <td><code>(valor & (1 << n))</code></td>
+                <td>Resultado é > 0 se o bit estiver a 1.</td>
+            </tr>
+            <tr>
+                <td><span class="method">Ativar (Set)</span></td>
+                <td><code>valor |= (1 << n)</code></td>
+                <td>Força o bit <code>n</code> a ser 1.</td>
+            </tr>
+            <tr>
+                <td><span class="method">Desativar (Clear)</span></td>
+                <td><code>valor &= ~(1 << n)</code></td>
+                <td>Força o bit <code>n</code> a ser 0.</td>
+            </tr>
+            <tr>
+                <td><span class="method">Inverter (Flip)</span></td>
+                <td><code>valor ^= (1 << n)</code></td>
+                <td>Troca 0 por 1 e vice-versa.</td>
+            </tr>
+        </table>
+    </div>
 
-// Função para imprimir Binário
-void print_binary(uint8_t valor) {
-    for (int j = 7; j >= 0; j--) {
-        int bit = (valor >> j) & 1; 
-        printf("%d", bit);
+    <div class="card">
+        <h3>Visualização Binária (Impressão)</h3>
+        <pre>
+void print_bits(uint8_t v) {
+    for(int i = 7; i >= 0; i--) {
+        printf("%d", (v >> i) & 1);
     }
     printf("\n");
-}
-        </pre>
+}</pre>
     </div>
 </section>
 
 <section>
-    <h2>4. Validações e Erros Comuns</h2>
-    <div class="important">
-        <strong>Lógica de Fluxo:</strong> Se houver erro nos dados, envia a resposta de erro e usa <code>continue</code> para saltar o resto do ciclo <code>while(1)</code>.
-    </div>
-    <div class="card">
-        <h3>Checklist de Validação</h3>
-        <ul>
-            <li><strong>Tamanho:</strong> <code>if (udp_read_bytes != sizeof(pedido_t))</code>.</li>
-            <li><strong>Gama:</strong> Estudante entre [2.000.000, 3.000.000[.</li>
-            <li><strong>Telefone:</strong> Começar por 9 (>= 900.000.000 e < 1.000.000.000).</li>
-            <li><strong>Array:</strong> Não exceder 200 contactos totais.</li>
-        </ul>
-    </div>
-</section>
-
-<section>
-    <h2>5. Tabelas Auxiliares</h2>
+    <h2>3. Manipulação de Strings e Comandos</h2>
     <div class="grid">
         <div class="card">
-            <h3>Formatação de Strings</h3>
-            <table>
-                <tr><th>%x</th><th>Hex minúsculo (a)</th></tr>
-                <tr><th>%X</th><th>Hex maiúsculo (A)</th></tr>
-                <tr><th>%02x</th><th>Hex de 2 dígitos (0a)</th></tr>
-            </table>
+            <h3><span class="method">sscanf</span> - Extrair dados</h3>
+            <p>Lê de uma string em vez do teclado.</p>
+            <pre>
+char input[] = "IP:192.168.1.1,PORT:8080";
+char ip[20];
+int port;
+sscanf(input, "IP:%[^,],PORT:%d", ip, &port);</pre>
         </div>
         <div class="card">
-            <h3>sscanf / sprintf</h3>
+            <h3><span class="method">sprintf</span> - Montar Strings</h3>
+            <p>Útil para criar comandos para a função <code>system()</code>.</p>
             <pre>
-// Extrair de string "10,20"
-sscanf(str, "%d,%d", &a, &b);
-
-// Criar string formatada
-sprintf(res, "Soma: %d", a+b);
-            </pre>
+char cmd[256];
+char cor[] = "#FF5733";
+sprintf(cmd, "convert -size 100x100 xc:%s imagem.png", cor);
+system(cmd); // Executa no terminal</pre>
         </div>
+    </div>
+    
+    <div class="card" style="border-top: 4px solid #2e7d32;">
+        <h3><span class="method">strncat</span> e <span class="method">strncpy</span> - Segurança</h3>
+        <p>Sempre preferir versões com <code>n</code> para evitar Buffer Overflow.</p>
+        <pre>
+char dest[50] = "Olá ";
+char src[] = "Mundo da Programação";
+strncat(dest, src, sizeof(dest) - strlen(dest) - 1); 
+// Garante que não escreve fora do array</pre>
     </div>
 </section>
 
-<footer style="margin-top: 50px; text-align: center; font-size: 0.9em; color: #666;">
-    <p>ESTG - Programação Avançada - Guia Prático de Exame</p>
+<section>
+    <h2>4. Validações de Rede e Erros</h2>
+    <div class="card">
+        <h3>Validação de IP (Presentation to Network)</h3>
+        <pre>
+#include &lt;arpa/inet.h&gt;
+struct in_addr addr;
+if (inet_pton(AF_INET, args.ip_arg, &addr) != 1) {
+    // IP Inválido!
+}</pre>
+    </div>
+
+    <div class="important">
+        <strong>Lógica de Servidor UDP:</strong> 
+        Ao validar pacotes, se um dado estiver fora de gama (ex: nota > 20), deves enviar uma resposta de erro ao cliente e usar o comando <code>continue;</code> para voltar ao início do <code>while(1)</code> sem processar o resto.
+    </div>
+</section>
+
+<section>
+    <h2>5. Tabela de Formatação (printf)</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Especificador</th>
+                <th>Tipo</th>
+                <th>Exemplo / Uso</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>%02x</code></td>
+                <td>Hexadecimal</td>
+                <td><code>0a</code> (Sempre 2 dígitos, minúsculo). Ideal para cores.</td>
+            </tr>
+            <tr>
+                <td><code>%X</code></td>
+                <td>Hexadecimal</td>
+                <td><code>1A2B</code> (Maiúsculas). Ideal para debug de endereços.</td>
+            </tr>
+            <tr>
+                <td><code>%u</code></td>
+                <td>Unsigned Int</td>
+                <td><code>uint32_t</code> (Sempre positivo).</td>
+            </tr>
+            <tr>
+                <td><code>%zu</code></td>
+                <td>size_t</td>
+                <td>Usado para o retorno de <code>sizeof()</code> ou <code>strlen()</code>.</td>
+            </tr>
+        </tbody>
+    </table>
+</section>
+
+<footer style="margin-top: 30px; text-align: center; font-size: 0.8em; color: #777; border-top: 1px solid #ccc; padding-top: 10px;">
+    Guia Prático ESTG - Programação Avançada. Boa sorte no exame!
 </footer>
 
 </body>
